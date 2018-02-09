@@ -1,0 +1,211 @@
+<head>
+	<script
+  	src="http://code.jquery.com/jquery-3.3.1.js"
+  	integrity="sha256-2Kok7MbOyxpgUVvAk/HJ2jigOSYS2auK4Pfzbm7uH60="
+  	crossorigin="anonymous"></script>
+  	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/css/bootstrap.min.css"
+   	integrity="sha384-rwoIResjU2yc3z8GV/NPeZWAv56rSmLldC3R/AZzGRnGxQQKnKkoFVhFQhNUwEyJ" crossorigin="anonymous">
+	<title>Zappos Challenge</title>
+	<meta name="viewport" content="initial-scale=1.0">
+	<meta charset="utf-8">
+	<style>
+    </style>
+    <script>
+		var base_url = "https://dbws4i6jxd.execute-api.us-east-2.amazonaws.com/v1/";
+		var ids = [];
+        function submit(){
+			if($('#name').val()==null){
+				$("body").append("<p>Please enter appropriate name</p>");
+			}
+			else if($('#zip').val()==null){
+				$("body").append("<p>Please enter appropriate zip</p>");
+			}
+			else{
+				var name = $('#name').val();
+				var location = $('#location').val();
+				var zip = $('#zip').val();
+				console.log(name);
+				$.ajax({
+					url : base_url + "insert?name="+name+"&location="+location+"&zip="+zip,
+					type : "POST",
+					success : function(data) {
+						console.log(data);
+					},
+					error : function(request, error) {
+						console.log("Error: " + error);
+					}
+				});
+			}
+		}
+
+        function submit_menu_items(){
+			if($('#m_name').val()==null){
+				console.log("yes")
+				$("body").append("<p>Please enter appropriate name</p>");
+			}
+			else if($('#price').val()==null){
+				console.log("yes")
+				$("body").append("<p>Please enter appropriate zip</p>");
+			}
+			else{
+				console.log("no");
+				var name = $('#m_name').val();
+				var restaurant_id = $('#restaurant_id').val();
+				var price = $('#price').val();
+				console.log(name);
+				$.ajax({
+					url : base_url + "insertmenuitem?name="+name+"&restaurant_id="+restaurant_id+"&price="+price,
+					type : "POST",
+					success : function(data) {
+						console.log(data);
+					},
+					error : function(request, error) {
+						console.log("Error: " + error);
+					}
+				});
+			}
+		}
+
+		function getRow(n) {
+			var row = n.parentNode.parentNode;
+			var cols = row.getElementsByTagName("td");
+			var i=0;
+			if(n.checked){
+				ids.push(cols[i].textContent);
+			}
+			else
+				ids.splice(ids.indexOf(cols[i].textContent), 1);
+		} 
+
+		function delete_items(cases){
+			if(cases=='single'){
+				ids = [$('#id').val()];
+			}
+			console.log(ids);
+			$.ajax({
+				url : base_url+"delete?ids="+ids,
+				type : "POST",
+				success : function(data) {
+					console.log(data);
+				},
+				error : function(request, error) {
+					console.log("Error: " + error);
+				}	
+			});
+		}
+
+		function search(action){
+			var url =  base_url+"search";
+
+			if(action=='name'){
+				url = url + "?param_value="+$('#d_name').val()+"&param_name="+action;
+			}
+
+			else{
+				url = url + "?param_value="+$('#d_location').val()+"&param_name="+action;
+			}
+
+			$.ajax({
+				url : url,
+				type : "POST",
+				success : function(data) {
+					console.log(data);
+					if(data){
+						var len = data.length;
+						var txt = "";
+						if(len > 0){
+							for(var i=0;i<len;i++){
+								if(data[i].name && data[i].location){
+									txt += "<tr><td><input type='checkbox' onclick='getRow(this)'></td>"+
+									"<td>"+data[i].id+"</td>"+
+									"<td>"+data[i].name+"</td>"+
+									"<td>"+data[i].location+"</td></tr>";
+								}
+							}
+							if(txt != ""){
+								$("#table").append(txt).removeClass("hidden");
+							}
+						}
+					}
+				},
+				error : function(request, error) {
+					console.log("Error: " + error);
+				}	
+			});
+		}
+    </script>
+</head>
+<body>
+	<div id="accordion" role="tablist" aria-multiselectable="true">
+		<div class="card">
+			<div class="card-header" role="tab" id="headingOne">
+				<h5 class="mb-0">
+					<a data-toggle="collapse" data-parent="#accordion" href="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
+						Insert Restaurant
+					</a>
+				</h5>
+			</div>
+		
+			<div id="collapseOne" class="collapse show" role="tabpanel" aria-labelledby="headingOne">
+				<div class="card-block">
+					<input type="text" id="name" name="name" placeholder="name">
+					<input type="text" id="location" placeholder="location">
+					<input type="text" id="zip" placeholder="zip">
+					<button onclick="submit()">Submit</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-header" role="tab" id="headingTwo">
+				<h5 class="mb-0">
+					<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+					Delete or View Items
+					</a>
+				</h5>
+			</div>
+			<div id="collapseTwo" class="collapse" role="tabpanel" aria-labelledby="headingTwo">
+				<div class="card-block">
+					<h5>Enter ID of Restaurant</h3>
+					<input type="text" id="id">
+					<button onclick="delete_items('single')">Delete</button>
+					
+					<h6>OR</h6>
+					<h5>Enter location</h5>
+					<input type="text" id="d_location">
+					<button onclick="search('location')">Search</button>
+					
+					<table id="table" class="hidden">
+						<tr>
+							<th>name</th>
+							<th>location</th>
+						</tr>
+					</table>
+					<button onclick="delete_items('multiple')">Delete</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="card">
+			<div class="card-header" role="tab" id="headingThree">
+				<h5 class="mb-0">
+					<a class="collapsed" data-toggle="collapse" data-parent="#accordion" href="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
+					    Insert Menu Items
+					</a>
+				</h5>
+			</div>
+
+			<div id="collapseThree" class="collapse" role="tabpanel" aria-labelledby="headingThree">
+				<div class="card-block">
+					<input type="text" id="m_name" name="m_name" placeholder="name">
+					<input type="text" id="restaurant_id" placeholder="Restaurant ID">
+					<input type="text" id="price" placeholder="Price in $">
+					<button onclick="submit_menu_items()">Submit</button>
+				</div>
+			</div>
+		</div>
+
+	</div>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/tether/1.4.0/js/tether.min.js" integrity="sha384-DztdAPBWPRXSA/3eYEEUWrWCy7G5KFbe8fFjk5JAIxUYHKkDx6Qin1DkWx51bBrb" crossorigin="anonymous"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-alpha.6/js/bootstrap.min.js" integrity="sha384-vBWWzlZJ8ea9aCX4pEW3rVHjgjt7zpkNpZk+02D9phzyeVkE+jo0ieGizqPLForn" crossorigin="anonymous"></script>
+</body>
